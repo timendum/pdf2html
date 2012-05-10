@@ -1,14 +1,10 @@
 package net.timendum.pdf;
 
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.sound.midi.SysexMessage;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -17,7 +13,7 @@ import org.apache.pdfbox.util.TextPosition;
 
 public class PDFText2HTML extends LocalPDFTextStripper {
 
-	private static final float DELTA = 0.15f;
+	private static final float DELTA = 2f;
 
 	private static final Writer NULL_WRITER = new Writer() {
 
@@ -37,10 +33,10 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected StatisticParser statisticParser;
 
 	protected float averangeLeftMargin;
-	protected double minLeftMargin;
+	//	protected double minLeftMargin;
 	protected double maxLeftMargin;
 	protected double minRightMargin;
-	protected double maxRightMargin;
+	//	protected double maxRightMargin;
 	protected float averangeFontSize;
 
 	protected float minBoxMean;
@@ -64,23 +60,18 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		statisticParser = new StatisticParser();
 
 		statisticParser.writeText(doc, output = NULL_WRITER);
-		System.err.println("Medie:");
-		System.err.println("  pagine: " + statisticParser.getPages());
-		System.err.println("  righe: " + statisticParser.getLines());
-		System.err.println("  righe medie: " + statisticParser.getAverangeLines());
-		System.err.println("  six medie: " + statisticParser.getAverangeLeftMargin());
-		System.err.println("  dex medie: " + statisticParser.getAverangeRightMargin());
-		System.err.println("  font: " + statisticParser.getAverangeFontSize());
+		System.err.println(statisticParser.toString());
+
+		averangeFontSize = statisticParser.getAverangeFontSize();
 
 		averangeLeftMargin = statisticParser.getAverangeLeftMargin();
-		float marginDelta = averangeLeftMargin * DELTA;
-		minLeftMargin = averangeLeftMargin - marginDelta;
+		float marginDelta = averangeFontSize * DELTA;
+		//		minLeftMargin = averangeLeftMargin - marginDelta;
 		maxLeftMargin = averangeLeftMargin + marginDelta;
 
 		minRightMargin = statisticParser.getAverangeRightMargin() - marginDelta;
-		maxRightMargin = statisticParser.getAverangeRightMargin() + marginDelta;
+		//		maxRightMargin = statisticParser.getAverangeRightMargin() + marginDelta;
 
-		averangeFontSize = statisticParser.getAverangeFontSize();
 
 		//outputStream = new PrintWriter(System.out);
 
@@ -92,8 +83,8 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		PDRectangle currentMediaBox = page.findMediaBox();
 		float mediaBoxWidth = currentMediaBox.getWidth();
 		float boxMean = mediaBoxWidth / 2;
-		minBoxMean = boxMean - boxMean * DELTA;
-		maxBoxMean = boxMean + boxMean * DELTA;
+		minBoxMean = boxMean - averangeFontSize * DELTA;
+		maxBoxMean = boxMean + averangeFontSize * DELTA;
 	}
 
 
@@ -268,14 +259,16 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		}
 
 		float start = -1;
-		start = getFirstTrimmed(line).getX();
-		if (start == -1) {
+		TextPosition firstText = getFirstTrimmed(line);
+		start = firstText.getX();
+		if (start == -1 || firstText.getCharacter().trim().isEmpty()) {
 			return;
 		}
 
 		float end = -1;
-		end = getLastTrimmed(line).getX();
-		if (end == -1) {
+		TextPosition lastText = getLastTrimmed(line);
+		end = lastText.getX();
+		if (end == -1 || lastText.getCharacter().trim().isEmpty()) {
 			return;
 		}
 
@@ -288,6 +281,8 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			} else if (end > minRightMargin) {
 				// right
 				align = "right";
+			} else {
+				System.err.println("Linea strana: " + line);
 			}
 		}
 

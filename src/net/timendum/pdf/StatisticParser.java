@@ -14,10 +14,10 @@ import org.apache.pdfbox.util.TextPosition;
 public class StatisticParser extends LocalPDFTextStripper {
 	private float pages = 0;
 	private float lines = 0;
-	private float leftMargin = 0;
-	//	private HashMap<Float, Integer> leftMargin = new HashMap<Float, Integer>();
-	private float rightMargin = 0;
-	//	private HashMap<Float, Integer> rightMargin = new HashMap<Float, Integer>();
+	//	private float leftMargin = 0;
+	private HashMap<Float, Integer> leftMargin = new HashMap<Float, Integer>();
+	//	private float rightMargin = 0;
+	private HashMap<Float, Integer> rightMargin = new HashMap<Float, Integer>();
 	private float averangeLine = 0;
 	private float averangeLeftMargin;
 	private float averangeRightMargin;
@@ -36,16 +36,18 @@ public class StatisticParser extends LocalPDFTextStripper {
 	protected void writeLineStart(List<TextPosition> line) {
 		lines++;
 		float start = line.get(0).getX();
-		leftMargin += start;
-		//		incrementOrAdd(leftMargin, start);
+		//		leftMargin += start;
+		incrementOrAdd(leftMargin, start);
 		float end = line.get(line.size() - 1).getX();
-		rightMargin += end;
-		//		incrementOrAdd(leftMargin, start);
+		//		rightMargin += end;
+		incrementOrAdd(rightMargin, end);
 
 		Float fontSize;
 		for (TextPosition t : line) {
 			fontSize = t.getFontSizeInPt();
-			incrementOrAdd(linesFontSize, fontSize);
+			if (fontSize > 0) {
+				incrementOrAdd(linesFontSize, fontSize);
+			}
 		}
 	}
 
@@ -63,10 +65,10 @@ public class StatisticParser extends LocalPDFTextStripper {
 	@Override
 	public void endDocument(PDDocument pdf) throws IOException {
 		averangeLine = lines / pages;
-		averangeLeftMargin = leftMargin / lines;
-		//		averangeLeftMargin = findMax(leftMargin);
-		averangeRightMargin = rightMargin / lines;
-		//		averangeRightMargin = findMax(rightMargin);
+		//		averangeLeftMargin = leftMargin / lines;
+		averangeLeftMargin = findMax(leftMargin);
+		//		averangeRightMargin = rightMargin / lines;
+		averangeRightMargin = findMax(rightMargin);
 		averangeFontSize = findMax(linesFontSize);
 
 	}
@@ -187,5 +189,31 @@ public class StatisticParser extends LocalPDFTextStripper {
 	@Override
 	protected void writeWordSeparator() throws IOException {
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("StatisticParser [pages=");
+		builder.append(pages);
+		builder.append(", lines=");
+		builder.append(lines);
+		builder.append(", averangeLine=");
+		builder.append(averangeLine);
+		builder.append(", averangeLeftMargin=");
+		builder.append(averangeLeftMargin);
+		builder.append(", averangeRightMargin=");
+		builder.append(averangeRightMargin);
+		builder.append(", averangeFontSize=");
+		builder.append(averangeFontSize);
+		builder.append(", leftMargin=");
+		builder.append(leftMargin);
+		builder.append(", rightMargin=");
+		builder.append(rightMargin);
+		builder.append(", linesFontSize=");
+		builder.append(linesFontSize);
+		builder.append("]");
+		return builder.toString();
+	}
+
 
 }
