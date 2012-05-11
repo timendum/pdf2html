@@ -94,10 +94,16 @@ public class Extract {
 
 		} finally {
 			if (output != null) {
-				output.close();
+				try {
+					output.close();
+				} catch (IOException e) {
+				}
 			}
 			if (document != null) {
-				document.close();
+				try {
+					document.close();
+				} catch (IOException e) {
+				}
 			}
 		}
 	}
