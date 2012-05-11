@@ -126,12 +126,6 @@ public class StatisticParser extends LocalPDFTextStripper {
 	}
 
 	@Override
-	protected PositionWrapper handleLineSeparation(PositionWrapper current, PositionWrapper lastPosition,
-			PositionWrapper lastLineStartPosition, float maxHeightForLine) throws IOException {
-		return lastLineStartPosition;
-	}
-
-	@Override
 	protected void isParagraphSeparation(PositionWrapper position, PositionWrapper lastPosition,
 			PositionWrapper lastLineStartPosition, float maxHeightForLine) {
 		super.isParagraphSeparation(position, lastPosition, lastLineStartPosition, maxHeightForLine);

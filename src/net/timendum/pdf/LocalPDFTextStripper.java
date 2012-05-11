@@ -45,7 +45,6 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 		float lastWordSpacing = LASTWORDSPACING_RESET_VALUE;
 		float maxHeightForLine = MAXHEIGHTFORLINE_RESET_VALUE;
 		PositionWrapper lastPosition = null;
-		PositionWrapper lastLineStartPosition = null;
 
 		boolean startOfPage = true;//flag to indicate start of page
 		boolean startOfArticle = true;
@@ -212,9 +211,8 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 					if (!overlap(positionY, positionHeight, maxYForLine, maxHeightForLine)) {
 						writeLine(isRtlDominant, hasRtl, line);
 						line.clear();
-
-						lastLineStartPosition = handleLineSeparation(current, lastPosition, lastLineStartPosition,
-							maxHeightForLine);
+						
+						writeLineSeparator();
 
 						endOfLastTextX = ENDOFLASTTEXTX_RESET_VALUE;
 						expectedStartOfNextWordX = EXPECTEDSTARTOFNEXTWORDX_RESET_VALUE;
@@ -255,7 +253,6 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 				if (startOfPage) {
 					lastPosition.setParagraphStart();
 					lastPosition.setLineStart();
-					lastLineStartPosition = lastPosition;
 					startOfPage = false;
 				}
 				lastWordSpacing = wordSpacing;
@@ -279,25 +276,6 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 		output.flush();
 		writeLineEnd(line);
 		output.flush();
-	}
-
-	protected PositionWrapper handleLineSeparation(PositionWrapper current, PositionWrapper lastPosition,
-			PositionWrapper lastLineStartPosition, float maxHeightForLine) throws IOException {
-
-		current.setLineStart();
-		isParagraphSeparation(current, lastPosition, lastLineStartPosition, maxHeightForLine);
-		lastLineStartPosition = current;
-		if (current.isParagraphStart()) {
-			if (lastPosition.isArticleStart()) {
-				writeParagraphStart();
-			} else {
-				writeLineSeparator();
-				writeParagraphSeparator();
-			}
-		} else {
-			writeLineSeparator();
-		}
-		return lastLineStartPosition;
 	}
 
 	protected void writeLine(List<String> line, boolean isRtlDominant) throws IOException {

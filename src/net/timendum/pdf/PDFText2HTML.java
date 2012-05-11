@@ -217,13 +217,6 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		super.writeLine(line, isRtlDominant);
 	}
 
-	@Override
-	protected PositionWrapper handleLineSeparation(PositionWrapper current, PositionWrapper lastPosition,
-			PositionWrapper lastLineStartPosition, float maxHeightForLine) throws IOException {
-		writeLineSeparator();
-		return current;
-	}
-
 	private static TextPosition getFirstTrimmed(List<TextPosition> line) {
 		String c;
 		for (int i = 0; i < line.size(); i++) {
