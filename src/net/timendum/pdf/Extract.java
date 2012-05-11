@@ -28,8 +28,7 @@ public class Extract {
 
 	private void startExtraction(String[] args) throws Exception {
 
-		String pdfFile;
-		pdfFile = "C:\\Users\\metello.bordin\\Downloads\\PiBiBooks - Rick Riordan - La maledizione del titano - (3° libro Percy Jackson e gli dei dell'Olimpo) by Zoe.pdf";
+		String pdfFile = null;
 		String outputFile = null;
 		String password = "";
 		String ext = ".html";
