@@ -30,6 +30,7 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 		normalize = new TextNormalize(outputEncoding);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected void writePage() throws IOException {
 		if (onFirstPage) {
