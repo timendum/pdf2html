@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.pdfbox.util.TextNormalize;
 import org.apache.pdfbox.util.TextPosition;
