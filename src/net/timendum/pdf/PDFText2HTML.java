@@ -51,6 +51,45 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 	@Override
+	protected void writeHeader() throws IOException {
+		StringBuilder buf = new StringBuilder();
+		buf.append("<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\"\n\"http://www.w3.org/TR/html4/loose.dtd\">\n");
+
+		buf.append("<html><head>");
+		buf.append("<title>" + escape(getTitle()) + "</title>\n");
+		if (outputEncoding != null) {
+			buf.append("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=" + outputEncoding + "\">\n");
+		}
+		String author = getAuthor();
+		if (author != null && !author.isEmpty()) {
+			buf.append("<meta name=\"Author\" content=\"");
+			buf.append(escape(author));
+			buf.append("\">");
+		}
+
+		buf.append("</head>\n");
+		buf.append("<body>\n");
+		output.write(buf.toString());
+	}
+
+	@Override
+	protected String getTitle() {
+		String titleGuess = document.getDocumentInformation().getTitle();
+		if ((titleGuess != null) && (titleGuess.length() > 0)) {
+			return titleGuess;
+		}
+		return "";
+	}
+
+	protected String getAuthor() {
+		String authorGuess = document.getDocumentInformation().getAuthor();
+		if ((authorGuess != null) && (authorGuess.length() > 0)) {
+			return authorGuess;
+		}
+		return "";
+	}
+
+	@Override
 	public void writeText(PDDocument doc, Writer outputStream) throws IOException {
 		statisticParser = new StatisticParser();
 

@@ -30,7 +30,6 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 		normalize = new TextNormalize(outputEncoding);
 	}
 
-
 	@Override
 	protected void writePage() throws IOException {
 		if (onFirstPage) {
@@ -327,5 +326,34 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 
 	protected boolean within(float first, float second, float variance) {
 		return second < first + variance && second > first - variance;
+	}
+
+	protected String escape(String chars) {
+		StringBuilder builder = new StringBuilder(chars.length());
+		for (int i = 0; i < chars.length(); ++i) {
+			char c = chars.charAt(i);
+
+			if ((c < ' ') || (c > '~')) {
+				builder.append("&#").append(c).append(";");
+			} else {
+				switch (c) {
+					case '"':
+						builder.append("&quot;");
+						break;
+					case '&':
+						builder.append("&amp;");
+						break;
+					case '<':
+						builder.append("&lt;");
+						break;
+					case '>':
+						builder.append("&gt;");
+						break;
+					default:
+						builder.append(String.valueOf(c));
+				}
+			}
+		}
+		return builder.toString();
 	}
 }
