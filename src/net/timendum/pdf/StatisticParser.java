@@ -126,26 +126,11 @@ public class StatisticParser extends LocalPDFTextStripper {
 	}
 
 	@Override
-	protected void isParagraphSeparation(PositionWrapper position, PositionWrapper lastPosition,
-			PositionWrapper lastLineStartPosition, float maxHeightForLine) {
-		super.isParagraphSeparation(position, lastPosition, lastLineStartPosition, maxHeightForLine);
-	}
-
-	@Override
-	protected List<String> normalize(List<TextPosition> line, boolean isRtlDominant, boolean hasRtl) throws IOException {
-		return Collections.emptyList();
-	}
-
-	@Override
 	protected void writeCharacters(TextPosition text) throws IOException {
 	}
 
 	@Override
 	protected void writeHeader() throws IOException {
-	}
-
-	@Override
-	protected void writeLine(List<String> line, boolean isRtlDominant) throws IOException {
 	}
 
 	@Override

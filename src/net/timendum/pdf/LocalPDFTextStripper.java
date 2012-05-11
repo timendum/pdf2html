@@ -211,7 +211,7 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 					if (!overlap(positionY, positionHeight, maxYForLine, maxHeightForLine)) {
 						writeLine(isRtlDominant, hasRtl, line);
 						line.clear();
-						
+
 						writeLineSeparator();
 
 						endOfLastTextX = ENDOFLASTTEXTX_RESET_VALUE;
@@ -272,39 +272,32 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 	protected void writeLine(boolean isRtlDominant, boolean hasRtl, List<TextPosition> line) throws IOException {
 		writeLineStart(line);
 		output.flush();
-		writeLine(normalize(line, isRtlDominant, hasRtl), isRtlDominant);
+		writeLine(line, isRtlDominant, hasRtl);
 		output.flush();
 		writeLineEnd(line);
 		output.flush();
 	}
 
-	protected void writeLine(List<String> line, boolean isRtlDominant) throws IOException {
-		int numberOfStrings = line.size();
-		if (isRtlDominant) {
-			for (int i = numberOfStrings - 1; i >= 0; i--) {
-				if (i < numberOfStrings - 1) {
-					writeWordSeparator();
-				}
-				writeLineStringBefore(i, line);
-				writeString(line.get(i));
-				writeLineStringAfter(i, line);
-			}
-		} else {
-			for (int i = 0; i < numberOfStrings; i++) {
-				writeLineStringBefore(i, line);
-				writeString(line.get(i));
-				writeLineStringAfter(i, line);
-				if (!isRtlDominant && i < numberOfStrings - 1) {
-					writeWordSeparator();
-				}
+	protected void writeLine(List<TextPosition> line, boolean isRtlDominant, boolean hasRtl) throws IOException {
+		String c, normalized;
+		for (TextPosition text : line) {
+			if (text instanceof WordSeparator) {
+				writeWordSeparator();
+			} else {
+				c = text.getCharacter();
+				normalized = normalize.normalizePres(c);
+				writeStringBefore(text, c, normalized);
+				writeString(normalized);
+				writeStringAfter(text, c, normalized);
+
 			}
 		}
 	}
 
-	protected void writeLineStringAfter(int i, List<String> line) throws IOException {
+	protected void writeStringAfter(TextPosition text, String c, String normalized) throws IOException {
 	}
 
-	protected void writeLineStringBefore(int i, List<String> line) throws IOException {
+	protected void writeStringBefore(TextPosition text, String c, String normalized) throws IOException {
 	}
 
 	protected TextNormalize normalize = null;
@@ -316,97 +309,6 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 	protected void writeLineEnd(List<TextPosition> line) throws IOException {
 
 	}
-
-	protected void isParagraphSeparation(PositionWrapper position, PositionWrapper lastPosition,
-			PositionWrapper lastLineStartPosition, float maxHeightForLine) {
-		boolean result = false;
-		if (lastLineStartPosition == null) {
-			result = true;
-		} else {
-			float yGap = Math
-				.abs(position.getTextPosition().getYDirAdj() - lastPosition.getTextPosition().getYDirAdj());
-			float xGap = (position.getTextPosition().getXDirAdj() - lastLineStartPosition.getTextPosition()
-				.getXDirAdj());//do we need to flip this for rtl?
-			if (yGap > (getDropThreshold() * maxHeightForLine)) {
-				result = true;
-			} else if (xGap > (getIndentThreshold() * position.getTextPosition().getWidthOfSpace())) {
-				//text is indented, but try to screen for hanging indent
-				if (!lastLineStartPosition.isParagraphStart()) {
-					result = true;
-				} else {
-					position.setHangingIndent();
-				}
-			} else if (xGap < -position.getTextPosition().getWidthOfSpace()) {
-				//text is left of previous line. Was it a hanging indent?
-				if (!lastLineStartPosition.isParagraphStart()) {
-					result = true;
-				}
-			} else if (Math.abs(xGap) < (0.25 * position.getTextPosition().getWidth())) {
-				//current horizontal position is within 1/4 a char of the last
-				//linestart.  We'll treat them as lined up.
-				if (lastLineStartPosition.isHangingIndent()) {
-					position.setHangingIndent();
-				} else if (lastLineStartPosition.isParagraphStart()) {
-					//check to see if the previous line looks like
-					//any of a number of standard list item formats
-					Pattern liPattern = matchListItemPattern(lastLineStartPosition);
-					if (liPattern != null) {
-						Pattern currentPattern = matchListItemPattern(position);
-						if (liPattern == currentPattern) {
-							result = true;
-						}
-					}
-				}
-			}
-		}
-		if (result) {
-			position.setParagraphStart();
-		}
-	}
-
-	protected List<String> normalize(List<TextPosition> line, boolean isRtlDominant, boolean hasRtl) throws IOException {
-		LinkedList<String> normalized = new LinkedList<String>();
-		StringBuilder lineBuilder = new StringBuilder();
-		List<TextPosition> word = new ArrayList<TextPosition>();
-		for (TextPosition text : line) {
-			if (text instanceof WordSeparator) {
-				normalizeWord(isRtlDominant, hasRtl, normalized, lineBuilder, word);
-				lineBuilder = new StringBuilder();
-			} else {
-				lineBuilder.append(text.getCharacter());
-				word.add(text);
-			}
-		}
-		if (lineBuilder.length() > 0) {
-			normalizeWord(isRtlDominant, hasRtl, normalized, lineBuilder, word);
-		}
-		return normalized;
-	}
-
-	protected void normalizeWord(boolean isRtlDominant, boolean hasRtl, LinkedList<String> normalized,
-			StringBuilder lineBuilder, List<TextPosition> word) throws IOException {
-		String lineStr = lineBuilder.toString();
-		if (hasRtl) {
-			lineStr = normalize.makeLineLogicalOrder(lineStr, isRtlDominant);
-		}
-		lineStr = normalize.normalizePres(lineStr);
-		normalizePre(word, lineStr, normalized);
-		normalized.add(lineStr);
-		normalizePost(word, lineStr, normalized);
-		word.clear();
-	}
-
-
-	protected void normalizePost(List<TextPosition> word, String lineStr, LinkedList<String> normalized)
-			throws IOException {
-
-	}
-
-	protected void normalizePre(List<TextPosition> word, String lineStr, LinkedList<String> normalized)
-			throws IOException {
-
-	}
-
 
 	protected static final class WordSeparator extends TextPosition {
 		private static final WordSeparator separator = new WordSeparator();

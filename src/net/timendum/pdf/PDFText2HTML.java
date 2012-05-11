@@ -41,9 +41,6 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	protected float minBoxMean;
 	protected float maxBoxMean;
-	private String align = null;
-	private boolean startP = false;
-	private boolean endP = false;
 
 	public PDFText2HTML(String encoding) throws IOException {
 		super(encoding);
@@ -88,64 +85,29 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 
-	@Override
-	protected void writeLineStart(List<TextPosition> line) throws IOException {
-		fontSizes = new ArrayList<Integer>(line.size());
-		align = null;
-		endP = false;
-		super.writeLineStart(line);
-		parseAlign(line);
-		String tag = writeStartTag();
-		if (tag != null) {
-			output.append(tag);
-		}
-	}
-
-	protected void normalizeStart(TextPosition text) {
-		int font = parseFont(text);
-		fontSizes.add(font);
-	}
+	private String align = null;
+	private int lastFont = 0;
+	private boolean startP = false;
+	private boolean endP = false;
 
 	@Override
-	protected void normalizePost(List<TextPosition> word, String lineStr, LinkedList<String> normalized)
-			throws IOException {
-
-	}
-
-	private List<Integer> fontSizes = null;
-
-	@Override
-	protected void normalizePre(List<TextPosition> word, String lineStr, LinkedList<String> normalized)
-			throws IOException {
-		if (word.size() < 1) {
-			fontSizes.add(Integer.valueOf(-1));
-			return;
-		}
-		TextPosition text = getFirstTrimmed(word);
-		float start = text.getFontSizeInPt();
-		float end = getLastTrimmed(word).getFontSizeInPt();
-
-		if (start != end) {
-			System.err.println("Parola non uniforme " + word);
+	protected void writeStringBefore(TextPosition text, String c, String normalized) throws IOException {
+		int fontSizes = -1;
+		if (text.getCharacter() == null) {
+			fontSizes = lastFont;
+		} else {
+			fontSizes = parseFont(text);
 		}
 
-		int font = parseFont(text);
-		fontSizes.add(font);
-	}
 
-	int lastFont = 0;
-
-	@Override
-	protected void writeLineStringBefore(int i, List<String> line) throws IOException {
-		int current = fontSizes.get(i).intValue();
-		if (current > 0) {
-			if (lastFont != 0) {
+		if (lastFont != fontSizes) {
+			if (lastFont > 0) {
 				output.write("</span>");
 			}
-			if (current > 0) {
-				output.write("<span style='font-size: " + current + "%'>");
+			if (fontSizes > 0) {
+				output.write("<span style='font-size: " + fontSizes + "%'>");
 			}
-			lastFont = current;
+			lastFont = fontSizes;
 		}
 
 	}
@@ -164,6 +126,18 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 	@Override
+	protected void writeLineStart(List<TextPosition> line) throws IOException {
+		align = null;
+		endP = false;
+		super.writeLineStart(line);
+		parseAlign(line);
+		String tag = writeStartTag();
+		if (tag != null) {
+			output.append(tag);
+		}
+	}
+
+	@Override
 	protected void writeLineEnd(List<TextPosition> line) throws IOException {
 		super.writeLineEnd(line);
 
@@ -171,7 +145,6 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			output.append("</span>");
 			lastFont = 0;
 		}
-
 
 		String tag = writeEndTag();
 		if (tag != null) {
@@ -182,6 +155,10 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected String writeStartTag() throws IOException {
 		if (align != null) {
 			StringBuilder sb = new StringBuilder();
+			if (startP) {
+				sb.append("</p>");
+				startP = false;
+			}
 			sb.append("<div style='");
 			if (align != null) {
 				sb.append("text-align: ");
@@ -210,11 +187,6 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			return "</p>";
 		}
 		return null;
-	}
-
-	@Override
-	protected void writeLine(List<String> line, boolean isRtlDominant) throws IOException {
-		super.writeLine(line, isRtlDominant);
 	}
 
 	private static TextPosition getFirstTrimmed(List<TextPosition> line) {
