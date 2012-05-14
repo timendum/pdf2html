@@ -1,6 +1,7 @@
 package net.timendum.pdf;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,19 +9,33 @@ import java.util.Map.Entry;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.TextPosition;
 
 public class StatisticParser extends LocalPDFTextStripper {
+	private static final int FLAG_FIXED_PITCH = 1;
+	private static final int FLAG_SERIF = 2;
+	private static final int FLAG_SYMBOLIC = 4;
+	private static final int FLAG_SCRIPT = 8;
+	private static final int FLAG_NON_SYMBOLIC = 32;
+	private static final int FLAG_ITALIC = 64;
+	private static final int FLAG_ALL_CAP = 65536;
+	private static final int FLAG_SMALL_CAP = 131072;
+	private static final int FLAG_FORCE_BOLD = 262144;
+
 	private float pages = 0;
 	private float lines = 0;
 	//	private float leftMargin = 0;
-	private HashMap<Float, Integer> leftMargin = new HashMap<Float, Integer>();
+	private Map<Float, Integer> leftMargin = new HashMap<Float, Integer>();
 	//	private float rightMargin = 0;
-	private HashMap<Float, Integer> rightMargin = new HashMap<Float, Integer>();
+	private Map<Float, Integer> rightMargin = new HashMap<Float, Integer>();
 	private float averangeLine = 0;
 	private float averangeLeftMargin;
 	private float averangeRightMargin;
-	private HashMap<Float, Integer> linesFontSize = new HashMap<Float, Integer>();
+	private Map<Float, Integer> linesFontSize = new HashMap<Float, Integer>();
+	private Map<PDFont, Integer> fonts = new HashMap<PDFont, Integer>();
 	private float averangeFontSize = 0;
 
 	public StatisticParser() throws IOException {
@@ -43,6 +58,10 @@ public class StatisticParser extends LocalPDFTextStripper {
 
 		Float fontSize;
 		for (TextPosition t : line) {
+			/*PDFont font = t.getFont();
+			if (font != null) {
+				incrementOrAdd(fonts, font);
+			}*/
 			fontSize = t.getFontSizeInPt();
 			if (fontSize > 0) {
 				incrementOrAdd(linesFontSize, fontSize);
@@ -50,7 +69,7 @@ public class StatisticParser extends LocalPDFTextStripper {
 		}
 	}
 
-	private static void incrementOrAdd(HashMap<Float, Integer> map, Float key) {
+	private static <T> void incrementOrAdd(Map<T, Integer> map, T key) {
 		Integer count;
 		count = map.get(key);
 		if (count == null) {
@@ -168,6 +187,46 @@ public class StatisticParser extends LocalPDFTextStripper {
 	protected void writeWordSeparator() throws IOException {
 	}
 
+	public static boolean isItalic(PDFontDescriptor descriptor) {
+		if (descriptor.getItalicAngle() != 0f) {
+			return true;
+		}
+		if ((descriptor.getFlags() & FLAG_ITALIC) == FLAG_ITALIC) {
+			return true;
+		}
+		if (descriptor.getFontName() != null && descriptor.getFontName().indexOf("Italic") > -1) {
+			return true;
+		}
+		return false;
+	}
+
+	public static boolean isBold(PDFontDescriptor descriptor) {
+		if (descriptor.getFontWeight() > 0f) {
+			return true;
+		}
+		if ((descriptor.getFlags() & FLAG_FORCE_BOLD) == FLAG_FORCE_BOLD) {
+			return true;
+		}
+		if (descriptor.getFontName() != null && descriptor.getFontName().indexOf("Bold") > -1) {
+			return true;
+		}
+		return false;
+	}
+	
+	public static boolean isItalic(TextPosition text) {
+		if (isItalic(text.getFont().getFontDescriptor())) {
+			return true;
+		}
+		Matrix textPos = text.getTextPos();
+		if (textPos != null && textPos.getXScale() < textPos.getYScale()) {
+			return true;
+		}
+		if (textPos != null && textPos.getXScale() > textPos.getYScale()) {
+			return true;
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -175,6 +234,8 @@ public class StatisticParser extends LocalPDFTextStripper {
 		builder.append(pages);
 		builder.append(", lines=");
 		builder.append(lines);
+		builder.append(", fonts=");
+		builder.append(fonts);
 		builder.append(", averangeLine=");
 		builder.append(averangeLine);
 		builder.append(", averangeLeftMargin=");
