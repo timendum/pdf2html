@@ -17,6 +17,21 @@ import org.apache.pdfbox.util.PDFTextStripper;
 public class Extract {
 	private static final String FORCE = "-force"; //enables pdfbox to skip corrupt objects
 	private static final String PASSWORD = "-password";
+	private static final String DEBUG = "-debug";
+	private static final Writer NULL_WRITER = new Writer() {
+
+		@Override
+		public void write(char[] paramArrayOfChar, int paramInt1, int paramInt2) throws IOException {
+		}
+
+		@Override
+		public void flush() throws IOException {
+		}
+
+		@Override
+		public void close() throws IOException {
+		}
+	};
 
 	private boolean debug = true;
 	private boolean force;
@@ -29,6 +44,7 @@ public class Extract {
 	private void startExtraction(String[] args) throws Exception {
 
 		String pdfFile = null;
+		pdfFile = "C:\\Users\\metello.bordin\\Downloads\\liferay-developer-guide-6.0.pdf";
 		String outputFile = null;
 		String password = "";
 		String ext = ".html";
@@ -39,6 +55,8 @@ public class Extract {
 				password = args[i];
 			} else if (args[i].equals(FORCE)) {
 				force = true;
+			} else if (args[i].equals(DEBUG)) {
+				debug = true;
 			} else if (pdfFile == null) {
 				pdfFile = args[i];
 			} else {
@@ -86,7 +104,12 @@ public class Extract {
 
 			output = new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8");
 
-			PDFTextStripper stripper = new PDFText2HTML("UTF-8");
+			StatisticParser statisticParser = new StatisticParser();
+			startTime = startProcessing("Starting text statistics");
+			statisticParser.writeText(document, output = NULL_WRITER);
+			stopProcessing("Time for statistics: ", startTime);
+
+			PDFTextStripper stripper = new PDFText2HTML("UTF-8", statisticParser);
 
 			startTime = startProcessing("Starting text extraction");
 			stripper.writeText(document, output);

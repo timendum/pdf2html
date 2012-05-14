@@ -13,22 +13,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	private static final float DELTA = 2f;
 
-	private static final Writer NULL_WRITER = new Writer() {
-
-		@Override
-		public void write(char[] paramArrayOfChar, int paramInt1, int paramInt2) throws IOException {
-		}
-
-		@Override
-		public void flush() throws IOException {
-		}
-
-		@Override
-		public void close() throws IOException {
-		}
-	};
-
-	protected StatisticParser statisticParser;
+	private final StatisticParser statisticParser;
 
 	protected float averangeLeftMargin;
 	//	protected double minLeftMargin;
@@ -40,8 +25,9 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected float minBoxMean;
 	protected float maxBoxMean;
 
-	public PDFText2HTML(String encoding) throws IOException {
+	public PDFText2HTML(String encoding, StatisticParser statisticParser) throws IOException {
 		super(encoding);
+		this.statisticParser = statisticParser;
 		setPageStart("");
 		setPageEnd("");
 		setArticleStart("");
@@ -91,9 +77,6 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	@Override
 	public void writeText(PDDocument doc, Writer outputStream) throws IOException {
-		statisticParser = new StatisticParser();
-
-		statisticParser.writeText(doc, output = NULL_WRITER);
 		System.err.println(statisticParser.toString());
 
 		averangeFontSize = statisticParser.getAverangeFontSize();
