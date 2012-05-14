@@ -77,17 +77,12 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	@Override
 	public void writeText(PDDocument doc, Writer outputStream) throws IOException {
-		System.err.println(statisticParser.toString());
-
 		averangeFontSize = statisticParser.getAverangeFontSize();
 
 		averangeLeftMargin = statisticParser.getAverangeLeftMargin();
 		float marginDelta = averangeFontSize * DELTA;
-		//		minLeftMargin = averangeLeftMargin - marginDelta;
 		maxLeftMargin = averangeLeftMargin + marginDelta;
-
 		minRightMargin = statisticParser.getAverangeRightMargin() - marginDelta;
-		//		maxRightMargin = statisticParser.getAverangeRightMargin() + marginDelta;
 
 
 		//outputStream = new PrintWriter(System.out);
@@ -106,30 +101,51 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 
 	private String align = null;
-	private int lastFont = 0;
 	private boolean startP = false;
 	private boolean endP = false;
+	private String lastStyle = null;
 
 	@Override
 	protected void writeStringBefore(TextPosition text, String c, String normalized) throws IOException {
-		int fontSizes = -1;
+		String style = null;
 		if (text.getCharacter() == null) {
-			fontSizes = lastFont;
+			style = lastStyle;
 		} else {
-			fontSizes = parseFont(text);
+			style = parseStyle(text);
 		}
 
 
-		if (lastFont != fontSizes) {
-			if (lastFont > 0) {
+		if (lastStyle == null || !lastStyle.equals(style)) {
+			if (lastStyle != null) {
 				output.write("</span>");
 			}
-			if (fontSizes > 0) {
-				output.write("<span style='font-size: " + fontSizes + "%'>");
+			if (style != null) {
+				output.write("<span style='" + style + "'>");
 			}
-			lastFont = fontSizes;
+			lastStyle = style;
 		}
 
+	}
+
+	private String parseStyle(TextPosition text) {
+		StringBuilder sb = new StringBuilder();
+		int fontSizes = parseFont(text);
+		if (fontSizes > 0) {
+			sb.append("font-size: ");
+			sb.append(fontSizes);
+			sb.append("%;");
+		}
+		if (StatisticParser.isBold(text.getFont().getFontDescriptor())) {
+			sb.append("font-weight: bold;");
+		}
+		if (StatisticParser.isItalic(text)) {
+			sb.append("font-style: italic;");
+		}
+
+		if (sb.length() > 0) {
+			return sb.toString();
+		}
+		return null;
 	}
 
 	private int parseFont(TextPosition text) {
@@ -161,9 +177,9 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected void writeLineEnd(List<TextPosition> line) throws IOException {
 		super.writeLineEnd(line);
 
-		if (lastFont > 0) {
+		if (lastStyle != null) {
 			output.append("</span>");
-			lastFont = 0;
+			lastStyle = null;
 		}
 
 		String tag = writeEndTag();
