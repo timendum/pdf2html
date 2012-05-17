@@ -49,10 +49,10 @@ public class StatisticParser extends LocalPDFTextStripper {
 	@Override
 	protected void writeLineStart(List<TextPosition> line) {
 		lines++;
-		float start = line.get(0).getX();
+		float start = getFirstTrimmed(line).getX();
 		//		leftMargin += start;
 		incrementOrAdd(leftMargin, start);
-		float end = line.get(line.size() - 1).getX();
+		float end = getLastTrimmed(line).getX();
 		//		rightMargin += end;
 		incrementOrAdd(rightMargin, end);
 

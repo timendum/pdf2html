@@ -225,34 +225,6 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		return null;
 	}
 
-	private static TextPosition getFirstTrimmed(List<TextPosition> line) {
-		String c;
-		for (int i = 0; i < line.size(); i++) {
-			if (line.get(i) == null) {
-				continue;
-			}
-			c = line.get(i).getCharacter();
-			if (c != null && c.trim().length() > 0) {
-				return line.get(i);
-			}
-		}
-		return line.get(0);
-	}
-
-	private static TextPosition getLastTrimmed(List<TextPosition> line) {
-		String c;
-		for (int i = line.size() - 1; i >= 0; i--) {
-			if (line.get(i) == null) {
-				continue;
-			}
-			c = line.get(i).getCharacter();
-			if (c != null && c.trim().length() > 0) {
-				return line.get(i);
-			}
-		}
-		return line.get(line.size() - 1);
-	}
-
 	protected void parseAlign(List<TextPosition> line) {
 
 		if (line.size() < 1) {
