@@ -44,7 +44,6 @@ public class Extract {
 	private void startExtraction(String[] args) throws Exception {
 
 		String pdfFile = null;
-		pdfFile = "C:\\Users\\metello.bordin\\Downloads\\liferay-developer-guide-6.0.pdf";
 		String outputFile = null;
 		String password = "";
 		String ext = ".html";
@@ -106,8 +105,12 @@ public class Extract {
 
 			StatisticParser statisticParser = new StatisticParser();
 			startTime = startProcessing("Starting text statistics");
-			statisticParser.writeText(document, output = NULL_WRITER);
+			statisticParser.writeText(document, NULL_WRITER);
 			stopProcessing("Time for statistics: ", startTime);
+
+			if (debug) {
+				System.err.println(statisticParser.toString());
+			}
 
 			PDFTextStripper stripper = new PDFText2HTML("UTF-8", statisticParser);
 
