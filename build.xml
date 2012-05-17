@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="build" name="pdf2html">
+	<property name="src.dir" value="src" />
+	<property name="work.dir" value="work" />
+	<property name="build.dir" value="${work.dir}/build" />
+	<property name="dist.dir" value="${work.dir}/dist" />
+	<property name="build.classes.dir" value="${build.dir}/classes" />
+	<property name="jar.name" value="pdf2html" />
+	<property name="lib.dir" value="lib" />
+
+	<property name="java.debug" value="true" />
+	<property name="java.debug.level" value="lines,vars,source" />
+
+	<target name="clean">
+		<delete includeemptydirs="true" failonerror="false">
+			<fileset dir="${build.dir}" />
+			<fileset dir="${dist.dir}" />
+			<fileset dir="${work.dir}" />
+		</delete>
+	</target>
+	<target name="prepare" depends="clean">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${dist.dir}" />
+	</target>
+
+	<path id="build.classpath">
+		<fileset dir="${lib.dir}" />
+	</path>
+
+	<target name="compile" depends="prepare">
+		<mkdir dir="${build.classes.dir}" />
+		<javac executable="${java.compiler}" srcdir="${src.dir}" destdir="${build.classes.dir}" debug="${java.debug}" debuglevel="${java.debug.level}" includeantruntime="false" includejavaruntime="false">
+			<classpath refid="build.classpath" />
+		</javac>
+	</target>
+
+	<target name="build" depends="compile">
+		<jar destfile="${dist.dir}/${jar.name}.jar">
+			<manifest>
+				<attribute name="Main-Class" value="net.timendum.pdf.Extract" />
+				<attribute name="Built-By" value="${user.name}" />
+			</manifest>
+			<fileset dir="${build.classes.dir}" />
+		</jar>
+	</target>
+
+	<target name="jarall" depends="build">
+		<jar jarfile="${dist.dir}/${jar.name}-all.jar">
+			<zipgroupfileset dir="lib" includes="*.jar" />
+			<zipfileset src="${dist.dir}/${jar.name}.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="net.timendum.pdf.Extract" />
+				<attribute name="Built-By" value="${user.name}" />
+			</manifest>
+		</jar>
+	</target>
+</project>
