@@ -20,7 +20,6 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 	private static final float LASTWORDSPACING_RESET_VALUE = -1;
 	private boolean onFirstPage = true;
 
-
 	public LocalPDFTextStripper() throws IOException {
 		this("UTF-8");
 	}

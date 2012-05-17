@@ -35,7 +35,7 @@ public class StatisticParser extends LocalPDFTextStripper {
 	private float averangeLeftMargin;
 	private float averangeRightMargin;
 	private Map<Float, Integer> linesFontSize = new HashMap<Float, Integer>();
-	private Map<PDFont, Integer> fonts = new HashMap<PDFont, Integer>();
+	//private Map<PDFont, Integer> fonts = new HashMap<PDFont, Integer>();
 	private float averangeFontSize = 0;
 
 	public StatisticParser() throws IOException {
@@ -212,7 +212,7 @@ public class StatisticParser extends LocalPDFTextStripper {
 		}
 		return false;
 	}
-	
+
 	public static boolean isItalic(TextPosition text) {
 		if (isItalic(text.getFont().getFontDescriptor())) {
 			return true;
@@ -230,27 +230,26 @@ public class StatisticParser extends LocalPDFTextStripper {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("StatisticParser [pages=");
+		builder.append("Pages=");
 		builder.append(pages);
-		builder.append(", lines=");
+		builder.append("\nlines=");
 		builder.append(lines);
-		builder.append(", fonts=");
-		builder.append(fonts);
-		builder.append(", averangeLine=");
+		//builder.append("\n#fonts=");
+		//builder.append(fonts.size());
+		builder.append("\naverangeLine=");
 		builder.append(averangeLine);
-		builder.append(", averangeLeftMargin=");
+		builder.append("\naverangeLeftMargin=");
 		builder.append(averangeLeftMargin);
-		builder.append(", averangeRightMargin=");
+		builder.append(", #leftMargin=");
+		builder.append(leftMargin.size());
+		builder.append("\naverangeRightMargin=");
 		builder.append(averangeRightMargin);
-		builder.append(", averangeFontSize=");
+		builder.append(" #rightMargin=");
+		builder.append(rightMargin.size());
+		builder.append("\naverangeFontSize=");
 		builder.append(averangeFontSize);
-		builder.append(", leftMargin=");
-		builder.append(leftMargin);
-		builder.append(", rightMargin=");
-		builder.append(rightMargin);
-		builder.append(", linesFontSize=");
-		builder.append(linesFontSize);
-		builder.append("]");
+		builder.append(" #linesFontSize=");
+		builder.append(linesFontSize.size());
 		return builder.toString();
 	}
 

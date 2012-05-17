@@ -13,11 +13,12 @@ import org.apache.pdfbox.pdmodel.encryption.AccessPermission;
 import org.apache.pdfbox.pdmodel.encryption.StandardDecryptionMaterial;
 import org.apache.pdfbox.util.PDFTextStripper;
 
-
 public class Extract {
 	private static final String FORCE = "-force"; //enables pdfbox to skip corrupt objects
 	private static final String PASSWORD = "-password";
 	private static final String DEBUG = "-debug";
+	private static final String CONSOLE = "-console";
+	private static final String SORT = "-sort";
 	private static final Writer NULL_WRITER = new Writer() {
 
 		@Override
@@ -33,8 +34,10 @@ public class Extract {
 		}
 	};
 
-	private boolean debug = true;
-	private boolean force;
+	private boolean debug = false;
+	private boolean force = false;
+	private boolean toConsole = false;
+	private boolean sort = false;
 
 	public static void main(String[] args) throws Exception {
 		Extract extractor = new Extract();
@@ -56,6 +59,10 @@ public class Extract {
 				force = true;
 			} else if (args[i].equals(DEBUG)) {
 				debug = true;
+			} else if (args[i].equals(CONSOLE)) {
+				toConsole = true;
+			} else if (args[i].equals(SORT)) {
+				sort = true;
 			} else if (pdfFile == null) {
 				pdfFile = args[i];
 			} else {
@@ -100,8 +107,11 @@ public class Extract {
 				}
 			}
 
-
-			output = new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8");
+			if (toConsole) {
+				output = new OutputStreamWriter(System.out);
+			} else {
+				output = new OutputStreamWriter(new FileOutputStream(outputFile), "UTF-8");
+			}
 
 			StatisticParser statisticParser = new StatisticParser();
 			startTime = startProcessing("Starting text statistics");
@@ -113,6 +123,8 @@ public class Extract {
 			}
 
 			PDFTextStripper stripper = new PDFText2HTML("UTF-8", statisticParser);
+			stripper.setForceParsing(force);
+			stripper.setSortByPosition(sort);
 
 			startTime = startProcessing("Starting text extraction");
 			stripper.writeText(document, output);
@@ -151,20 +163,14 @@ public class Extract {
 	}
 
 	private void usage() {
-		System.err.println("Usage: java -jar jar Extract <PDF file> [Text File]\n"
+		System.err.println("Usage: java -jar jar <PDF file> [Text File]\n"
 			+ "  -password  <password>        Password to decrypt document\n"
-			+ "  -encoding  <output encoding> (ISO-8859-1,UTF-16BE,UTF-16LE,...)\n"
 			+ "  -console                     Send text to console instead of file\n"
-			+ "  -html                        Output in HTML format instead of raw text\n"
 			+ "  -sort                        Sort the text before writing\n"
-			+ "  -ignoreBeads                 Disables the separation by beads\n"
 			+ "  -force                       Enables pdfbox to ignore corrupt objects\n"
 			+ "  -debug                       Enables debug output about the time consumption of every stage\n"
-			+ "  -startPage <number>          The first page to start extraction(1 based)\n"
-			+ "  -endPage <number>            The last page to extract(inclusive)\n"
 			+ "  <PDF file>                   The PDF document to use\n"
 			+ "  [Text File]                  The file to write the text to\n");
 		System.exit(1);
-
 	}
 }
