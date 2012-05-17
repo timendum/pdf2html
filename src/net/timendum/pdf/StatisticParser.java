@@ -36,19 +36,33 @@ public class StatisticParser extends LocalPDFTextStripper {
 	private float averangeRightMargin;
 	private Map<Float, Integer> linesFontSize = new HashMap<Float, Integer>();
 	//private Map<PDFont, Integer> fonts = new HashMap<PDFont, Integer>();
+	private Map<Float, Integer> lineSpacing = new HashMap<Float, Integer>();
+	private float averangeLineSpacing = 0;
+	private Map<Float, Integer> lastLine = new HashMap<Float, Integer>();
+	private float averangeLastLine = 0;
 	private float averangeFontSize = 0;
 
 	public StatisticParser() throws IOException {
 	}
 
+	private float prevLineY = -1f;
+
 	@Override
 	protected void startPage(PDPage page) throws IOException {
 		pages++;
+		prevLineY = -1f;
 	}
 
 	@Override
 	protected void writeLineStart(List<TextPosition> line) {
 		lines++;
+
+		float lineY = getFirstTrimmed(line).getY();
+		if (prevLineY >= 0f) {
+			incrementOrAdd(lineSpacing, lineY - prevLineY);
+		}
+		prevLineY = lineY;
+
 		float start = getFirstTrimmed(line).getX();
 		//		leftMargin += start;
 		incrementOrAdd(leftMargin, start);
@@ -69,6 +83,14 @@ public class StatisticParser extends LocalPDFTextStripper {
 		}
 	}
 
+	@Override
+	protected void endPage(PDPage page) throws IOException {
+		if (prevLineY >= 0f) {
+			incrementOrAdd(lastLine, prevLineY);
+		}
+	}
+
+
 	private static <T> void incrementOrAdd(Map<T, Integer> map, T key) {
 		Integer count;
 		count = map.get(key);
@@ -88,6 +110,8 @@ public class StatisticParser extends LocalPDFTextStripper {
 		//		averangeRightMargin = rightMargin / lines;
 		averangeRightMargin = findMax(rightMargin);
 		averangeFontSize = findMax(linesFontSize);
+		averangeLineSpacing = findMax(lineSpacing);
+		averangeLastLine = findMax(lastLine);
 
 	}
 
@@ -127,6 +151,14 @@ public class StatisticParser extends LocalPDFTextStripper {
 		return averangeFontSize;
 	}
 
+	public float getAverangeLineSpacing() {
+		return averangeLineSpacing;
+	}
+
+	public float getAverangeLastLine() {
+		return averangeLastLine;
+	}
+
 	@Override
 	protected void startArticle() throws IOException {
 	}
@@ -137,10 +169,6 @@ public class StatisticParser extends LocalPDFTextStripper {
 
 	@Override
 	protected void endArticle() throws IOException {
-	}
-
-	@Override
-	protected void endPage(PDPage page) throws IOException {
 	}
 
 	@Override
@@ -230,26 +258,18 @@ public class StatisticParser extends LocalPDFTextStripper {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("Pages=");
-		builder.append(pages);
-		builder.append("\nlines=");
-		builder.append(lines);
+		builder.append("Pages=").append(pages);
+		builder.append("\nlines=").append(lines);
 		//builder.append("\n#fonts=");
 		//builder.append(fonts.size());
-		builder.append("\naverangeLine=");
-		builder.append(averangeLine);
-		builder.append("\naverangeLeftMargin=");
-		builder.append(averangeLeftMargin);
-		builder.append(", #leftMargin=");
-		builder.append(leftMargin.size());
-		builder.append("\naverangeRightMargin=");
-		builder.append(averangeRightMargin);
-		builder.append(" #rightMargin=");
-		builder.append(rightMargin.size());
-		builder.append("\naverangeFontSize=");
-		builder.append(averangeFontSize);
-		builder.append(" #linesFontSize=");
-		builder.append(linesFontSize.size());
+		//@formatter:off
+		builder.append("\naverangeLineSpacing=").append(averangeLineSpacing).append(" #lineSpacing=").append(lineSpacing.size());
+		builder.append("\naverangeLastLine=").append(averangeLastLine).append(" #lastLine=").append(lastLine.size());
+		builder.append("\naverangeLine=").append(averangeLine);
+		builder.append("\naverangeLeftMargin=").append(averangeLeftMargin).append(", #leftMargin=").append(leftMargin.size());
+		builder.append("\naverangeRightMargin=").append(averangeRightMargin).append(" #rightMargin=").append(rightMargin.size());
+		builder.append("\naverangeFontSize=").append(averangeFontSize).append(" #linesFontSize=").append(linesFontSize.size());
+		//@formatter:on
 		return builder.toString();
 	}
 
