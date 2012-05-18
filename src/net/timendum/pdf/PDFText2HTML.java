@@ -112,6 +112,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	private boolean endP = false;
 	private String lastStyle = null;
 	private float prevLineY = -1f;
+	private boolean pageBreak = false;
 
 	@Override
 	protected void writeStringBefore(TextPosition text, String c, String normalized) throws IOException {
@@ -217,6 +218,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 				sb.append(lineSpacing);
 				sb.append(';');
 			}
+			addPageBreak(sb);
 			if (align != null) {
 				sb.append("text-align: ");
 				sb.append(align);
@@ -228,10 +230,25 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 		if (startP == false) {
 			startP = true;
-			return "<p>";
+			StringBuilder sb = new StringBuilder();
+			sb.append("<p");
+			if (pageBreak) {
+				sb.append(" style='");
+				addPageBreak(sb);
+				sb.append('\'');
+			}
+			sb.append('>');
+			return sb.toString();
 		}
 		return null;
 
+	}
+
+	private void addPageBreak(StringBuilder sb) {
+		if (pageBreak) {
+			sb.append("page-break-before: always;");
+			pageBreak = false;
+		}
 	}
 
 	protected String writeEndTag() throws IOException {
@@ -255,6 +272,13 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			}
 		}
 		prevLineY = lineY;
+	}
+
+	@Override
+	protected void endPage(PDPage page) throws IOException {
+		if (prevLineY > -1f && ((averangeLastLine - prevLineY) > averangeFontSize)) {
+			pageBreak = true;
+		}
 	}
 
 	protected void parseAlign(List<TextPosition> line) {
