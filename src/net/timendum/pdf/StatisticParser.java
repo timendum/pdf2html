@@ -69,7 +69,8 @@ public class StatisticParser extends LocalPDFTextStripper {
 		float start = getFirstTrimmed(line).getX();
 		//		leftMargin += start;
 		incrementOrAdd(leftMargin, start);
-		float end = getLastTrimmed(line).getX();
+		TextPosition lastTrimmed = getLastTrimmed(line);
+		float end = lastTrimmed.getX() + lastTrimmed.getWidth();
 		//		rightMargin += end;
 		incrementOrAdd(rightMargin, end);
 

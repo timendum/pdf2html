@@ -296,7 +296,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 		float end = -1;
 		TextPosition lastText = getLastTrimmed(line);
-		end = lastText.getX();
+		end = lastText.getX() + lastText.getWidth();
 		if (end == -1 || lastText.getCharacter().trim().isEmpty()) {
 			return;
 		}
@@ -311,7 +311,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 				// right
 				align = "right";
 			} else {
-				System.err.println("Linea strana: " + line);
+				// System.err.println("Strange line: " + line);
 			}
 		}
 
