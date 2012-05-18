@@ -266,15 +266,23 @@ public class StatisticParser extends LocalPDFTextStripper {
 		//builder.append("\n#fonts=");
 		//builder.append(fonts.size());
 		//@formatter:off
-		builder.append("\naverangeLineSpacing=").append(averangeLineSpacing).append(" #lineSpacing=").append(lineSpacing.size());
-		builder.append("\naverangeLastLine=").append(averangeLastLine).append(" #lastLine=").append(lastLine.size());
+		builder.append("\naverangeLineSpacing=").append(averangeLineSpacing)
+			.append(" #lineSpacing=").append(lineSpacing.size());
+		builder.append("\naverangeLastLine=").append(averangeLastLine)
+			.append(" #lastLine=").append(lastLine.size())
+			.append('x').append(lastLine.get(averangeLastLine));
 		builder.append("\naverangeLine=").append(averangeLine);
-		builder.append("\naverangeLeftMargin=").append(averangeLeftMargin).append(", #leftMargin=").append(leftMargin.size());
-		builder.append("\naverangeRightMargin=").append(averangeRightMargin).append(" #rightMargin=").append(rightMargin.size());
-		builder.append("\naverangeFontSize=").append(averangeFontSize).append(" #linesFontSize=").append(linesFontSize.size());
+		builder.append("\naverangeLeftMargin=").append(averangeLeftMargin)
+			.append(", #leftMargin=").append(leftMargin.size())
+			.append('x').append(leftMargin.get(averangeLeftMargin));
+		builder.append("\naverangeRightMargin=").append(averangeRightMargin)
+			.append(" #rightMargin=").append(rightMargin.size())
+			.append('x').append(rightMargin.get(averangeRightMargin));
+		builder.append("\naverangeFontSize=").append(averangeFontSize)
+			.append(" #linesFontSize=").append(linesFontSize.size())
+			.append('x').append(linesFontSize.get(averangeFontSize));
 		//@formatter:on
 		return builder.toString();
 	}
-
 
 }
