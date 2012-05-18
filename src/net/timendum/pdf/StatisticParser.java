@@ -55,6 +55,9 @@ public class StatisticParser extends LocalPDFTextStripper {
 
 	@Override
 	protected void writeLineStart(List<TextPosition> line) {
+		if (isLineEmpty(line)) {
+			return;
+		}
 		lines++;
 
 		float lineY = getFirstTrimmed(line).getY();

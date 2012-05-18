@@ -384,4 +384,8 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 		}
 		return line.get(line.size() - 1);
 	}
+
+	protected boolean isLineEmpty(List<TextPosition> line) {
+		return getFirstTrimmed(line).getCharacter().trim().isEmpty();
+	}
 }
