@@ -21,9 +21,12 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected double minRightMargin;
 	//	protected double maxRightMargin;
 	protected float averangeFontSize;
+	private float averangeLastLine;
+	private float averangeLineSpacing;
 
 	protected float minBoxMean;
 	protected float maxBoxMean;
+
 
 	public PDFText2HTML(String encoding, StatisticParser statisticParser) throws IOException {
 		super(encoding);
@@ -84,6 +87,8 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		maxLeftMargin = averangeLeftMargin + marginDelta;
 		minRightMargin = statisticParser.getAverangeRightMargin() - marginDelta;
 
+		averangeLastLine = statisticParser.getAverangeLastLine();
+		averangeLineSpacing = statisticParser.getAverangeLineSpacing();
 
 		//outputStream = new PrintWriter(System.out);
 
@@ -97,13 +102,16 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		float boxMean = mediaBoxWidth / 2;
 		minBoxMean = boxMean - averangeFontSize * DELTA;
 		maxBoxMean = boxMean + averangeFontSize * DELTA;
+		prevLineY = -1f;
 	}
 
 
 	private String align = null;
+	private String lineSpacing = null;
 	private boolean startP = false;
 	private boolean endP = false;
 	private String lastStyle = null;
+	private float prevLineY = -1f;
 
 	@Override
 	protected void writeStringBefore(TextPosition text, String c, String normalized) throws IOException {
@@ -163,10 +171,15 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	@Override
 	protected void writeLineStart(List<TextPosition> line) throws IOException {
+		if (isLineEmpty(line)) {
+			return;
+		}
 		align = null;
+		lineSpacing = null;
 		endP = false;
 		super.writeLineStart(line);
 		parseAlign(line);
+		parseLineSpace(line);
 		String tag = writeStartTag();
 		if (tag != null) {
 			output.append(tag);
@@ -175,6 +188,9 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	@Override
 	protected void writeLineEnd(List<TextPosition> line) throws IOException {
+		if (isLineEmpty(line)) {
+			return;
+		}
 		super.writeLineEnd(line);
 
 		if (lastStyle != null) {
@@ -189,13 +205,18 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 	protected String writeStartTag() throws IOException {
-		if (align != null) {
+		if (align != null || lineSpacing != null) {
 			StringBuilder sb = new StringBuilder();
 			if (startP) {
 				sb.append("</p>");
 				startP = false;
 			}
 			sb.append("<div style='");
+			if (lineSpacing != null) {
+				sb.append("margin-top: ");
+				sb.append(lineSpacing);
+				sb.append(';');
+			}
 			if (align != null) {
 				sb.append("text-align: ");
 				sb.append(align);
@@ -214,7 +235,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 	protected String writeEndTag() throws IOException {
-		if (align != null) {
+		if (align != null || lineSpacing != null) {
 			return "</div>";
 		}
 
@@ -223,6 +244,17 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			return "</p>";
 		}
 		return null;
+	}
+
+	protected void parseLineSpace(List<TextPosition> line) {
+		float lineY = getFirstTrimmed(line).getY();
+		if (prevLineY >= 0f && lineY - prevLineY > averangeLineSpacing) {
+			float perc = (lineY - prevLineY - averangeLineSpacing) / averangeFontSize;
+			if (perc > 0.2f) {
+				lineSpacing = perc + "em";
+			}
+		}
+		prevLineY = lineY;
 	}
 
 	protected void parseAlign(List<TextPosition> line) {
@@ -246,7 +278,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		}
 
 		if (start > maxLeftMargin /*&& end < minRightMargin*/) {
-			// too much margin
+			// too much lineSpacing
 			float lineMean = (end + start) / 2;
 			if (lineMean > minBoxMean && lineMean < maxBoxMean) {
 				// centered
