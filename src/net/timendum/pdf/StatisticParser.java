@@ -268,7 +268,8 @@ public class StatisticParser extends LocalPDFTextStripper {
 		//builder.append(fonts.size());
 		//@formatter:off
 		builder.append("\naverangeLineSpacing=").append(averangeLineSpacing)
-			.append(" #lineSpacing=").append(lineSpacing.size());
+			.append(" #lineSpacing=").append(lineSpacing.size())
+			.append('x').append(lineSpacing.get(averangeLineSpacing));
 		builder.append("\naverangeLastLine=").append(averangeLastLine)
 			.append(" #lastLine=").append(lastLine.size())
 			.append('x').append(lastLine.get(averangeLastLine));
