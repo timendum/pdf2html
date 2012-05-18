@@ -126,7 +126,12 @@ public class Extract {
 			stripper.setForceParsing(force);
 			stripper.setSortByPosition(sort);
 
-			startTime = startProcessing("Starting text extraction");
+			startTime = startProcessing("Starting image extraction");
+			Images2HTML image = new Images2HTML();
+			image.processDocument(document);
+			stopProcessing("Time image extraction: ", startTime);
+
+			startTime = startProcessing("Starting html extraction");
 			stripper.writeText(document, output);
 			stopProcessing("Time for extraction: ", startTime);
 
