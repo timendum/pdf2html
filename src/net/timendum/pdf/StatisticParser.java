@@ -1,7 +1,6 @@
 package net.timendum.pdf;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,10 +8,12 @@ import java.util.Map.Entry;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.TextPosition;
+
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
 
 public class StatisticParser extends LocalPDFTextStripper {
 	private static final int FLAG_FIXED_PITCH = 1;
@@ -28,17 +29,18 @@ public class StatisticParser extends LocalPDFTextStripper {
 	private float pages = 0;
 	private float lines = 0;
 	//	private float leftMargin = 0;
-	private Map<Float, Integer> leftMargin = new HashMap<Float, Integer>();
+	private Multiset<Float> leftMargin = HashMultiset.create();
 	//	private float rightMargin = 0;
-	private Map<Float, Integer> rightMargin = new HashMap<Float, Integer>();
+	private Multiset<Float> rightMargin = HashMultiset.create();
 	private float averangeLine = 0;
 	private float averangeLeftMargin;
 	private float averangeRightMargin;
-	private Map<Float, Integer> linesFontSize = new HashMap<Float, Integer>();
+	private Multiset<Float> linesFontSize = HashMultiset.create();
 	//private Map<PDFont, Integer> fonts = new HashMap<PDFont, Integer>();
-	private Map<Float, Integer> lineSpacing = new HashMap<Float, Integer>();
+	private Multiset<Float> lineSpacing = HashMultiset.create();
 	private float averangeLineSpacing = 0;
-	private Map<Float, Integer> lastLine = new HashMap<Float, Integer>();
+	//private Map<Float, Integer> lastLine = new HashMap<Float, Integer>();
+	private Multiset<Float> lastLine = HashMultiset.create();
 	private float averangeLastLine = 0;
 	private float averangeFontSize = 0;
 
@@ -95,15 +97,8 @@ public class StatisticParser extends LocalPDFTextStripper {
 	}
 
 
-	private static <T> void incrementOrAdd(Map<T, Integer> map, T key) {
-		Integer count;
-		count = map.get(key);
-		if (count == null) {
-			count = Integer.valueOf(1);
-		} else {
-			count = Integer.valueOf(count.intValue() + 1);
-		}
-		map.put(key, count);
+	private void incrementOrAdd(Multiset<Float> multiset, float key) {
+		multiset.add(key);
 	}
 
 	@Override
@@ -119,13 +114,15 @@ public class StatisticParser extends LocalPDFTextStripper {
 
 	}
 
-	private static Float findMax(Map<Float, Integer> map) {
+	private float findMax(Multiset<Float> multiset) {
 		Float actual = null;
 		int max = -1;
-		for (Entry<Float, Integer> entry : map.entrySet()) {
-			if (entry.getValue().intValue() > max) {
-				max = entry.getValue().intValue();
-				actual = entry.getKey();
+		for (Float k : multiset) {
+			int count = multiset.count(k);
+			if (count > max) {
+				max = count;
+				actual = k;
+
 			}
 		}
 		return actual;
@@ -269,20 +266,20 @@ public class StatisticParser extends LocalPDFTextStripper {
 		//@formatter:off
 		builder.append("\naverangeLineSpacing=").append(averangeLineSpacing)
 			.append(" #lineSpacing=").append(lineSpacing.size())
-			.append('x').append(lineSpacing.get(averangeLineSpacing));
+			.append('x').append(lineSpacing.count(averangeLineSpacing));
 		builder.append("\naverangeLastLine=").append(averangeLastLine)
 			.append(" #lastLine=").append(lastLine.size())
-			.append('x').append(lastLine.get(averangeLastLine));
+			.append('x').append(lastLine.count(averangeLastLine));
 		builder.append("\naverangeLine=").append(averangeLine);
 		builder.append("\naverangeLeftMargin=").append(averangeLeftMargin)
 			.append(", #leftMargin=").append(leftMargin.size())
-			.append('x').append(leftMargin.get(averangeLeftMargin));
+			.append('x').append(leftMargin.count(averangeLeftMargin));
 		builder.append("\naverangeRightMargin=").append(averangeRightMargin)
 			.append(" #rightMargin=").append(rightMargin.size())
-			.append('x').append(rightMargin.get(averangeRightMargin));
+			.append('x').append(rightMargin.count(averangeRightMargin));
 		builder.append("\naverangeFontSize=").append(averangeFontSize)
 			.append(" #linesFontSize=").append(linesFontSize.size())
-			.append('x').append(linesFontSize.get(averangeFontSize));
+			.append('x').append(linesFontSize.count(averangeFontSize));
 		//@formatter:on
 		return builder.toString();
 	}
