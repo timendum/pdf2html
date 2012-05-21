@@ -1,19 +1,29 @@
 package net.timendum.pdf;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import net.timendum.pdf.beans.Image;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.util.TextPosition;
 
+import com.google.common.collect.ImmutableTable;
+import com.google.common.collect.Table;
+
 public class PDFText2HTML extends LocalPDFTextStripper {
 
 	private static final float DELTA = 2f;
 
-	private final StatisticParser statisticParser;
+	protected final StatisticParser statisticParser;
+	protected Images2HTML imageStripper = null;
 
 	protected float averangeLeftMargin;
 	//	protected double minLeftMargin;
@@ -27,6 +37,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected float minBoxMean;
 	protected float maxBoxMean;
 
+	private Table<PDPage, Float, Image> images = ImmutableTable.of();
 
 	public PDFText2HTML(String encoding, StatisticParser statisticParser) throws IOException {
 		super(encoding);
@@ -37,6 +48,11 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		setArticleEnd("");
 		setParagraphStart("");
 		setParagraphEnd(systemLineSeparator);
+	}
+
+	public void setImageStripper(Images2HTML image) {
+		imageStripper = image;
+		images = image.getImages();
 	}
 
 	@Override
@@ -103,8 +119,10 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		minBoxMean = boxMean - averangeFontSize * DELTA;
 		maxBoxMean = boxMean + averangeFontSize * DELTA;
 		prevLineY = -1f;
+		pageImages = images.row(page);
 	}
 
+	protected Map<Float, Image> pageImages = Collections.emptyMap();
 
 	private String align = null;
 	private String lineSpacing = null;
@@ -113,6 +131,32 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	private String lastStyle = null;
 	private float prevLineY = -1f;
 	private boolean pageBreak = false;
+
+	protected void printImage(List<TextPosition> line) throws IOException {
+		TextPosition start = getFirstTrimmed(line);
+		float y = start.getY();
+		for (Entry<Float, Image> entry : pageImages.entrySet()) {
+			if (entry.getKey() < y) {
+				Image image = entry.getValue();
+				String name = imageStripper.printImage(image);
+				pageImages.remove(entry.getKey());
+
+				StringBuilder sb = new StringBuilder();
+
+				sb.append("<img ");
+				sb.append("src='");
+				sb.append(name);
+				sb.append("' ");
+				if (pageBreak) {
+					sb.append(" style='");
+					addPageBreak(sb);
+					sb.append('\'');
+				}
+				sb.append("/>");
+				output.write(sb.toString());
+			}
+		}
+	}
 
 	@Override
 	protected void writeStringBefore(TextPosition text, String c, String normalized) throws IOException {
@@ -178,6 +222,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		align = null;
 		lineSpacing = null;
 		endP = false;
+		printImage(line);
 		super.writeLineStart(line);
 		parseAlign(line);
 		parseLineSpace(line);
