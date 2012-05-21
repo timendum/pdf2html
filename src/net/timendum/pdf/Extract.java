@@ -20,6 +20,7 @@ public class Extract {
 	private static final String SORT = "-sort";
 	private static final String IMAGE_NAME = "-imageKey";
 	private static final String PREFIX = "-prefix";
+	private static final String IMAGE_OFF = "-noimage";
 	private static final Writer NULL_WRITER = new Writer() {
 
 		@Override
@@ -40,6 +41,7 @@ public class Extract {
 	private boolean toConsole = false;
 	private boolean sort = false;
 	private boolean lazyImages = false;
+	private boolean noImage = false;
 	private String prefix = null;
 
 	public static void main(String[] args) throws Exception {
@@ -72,6 +74,8 @@ public class Extract {
 				toConsole = true;
 			} else if (args[i].equals(IMAGE_NAME)) {
 				lazyImages = true;
+			} else if (args[i].equals(IMAGE_OFF)) {
+				noImage = true;
 			} else if (args[i].equals(SORT)) {
 				sort = true;
 			} else if (pdfFile == null) {
@@ -141,7 +145,7 @@ public class Extract {
 			}
 
 			Images2HTML image = null;
-			if (!toConsole) {
+			if (!toConsole && !noImage) {
 				startTime = startProcessing("Starting image extraction");
 				image = new Images2HTML();
 				image.setLazyImages(lazyImages);
