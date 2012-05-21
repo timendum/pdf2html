@@ -140,6 +140,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 				Image image = entry.getValue();
 				String name = imageStripper.printImage(image);
 				pageImages.remove(entry.getKey());
+				prevLineY = y + image.image.getHeight();
 
 				StringBuilder sb = new StringBuilder();
 
