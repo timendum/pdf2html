@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.TextPosition;
@@ -57,8 +58,10 @@ public class StatisticParser extends LocalPDFTextStripper {
 	private float averangeLineSpacing = 0;
 	//private Map<Float, Integer> lastLine = new HashMap<Float, Integer>();
 	private Multiset<Float> lastLine = HashMultiset.create();
+	private Multiset<Float> fontWeight = HashMultiset.create();
 	private float averangeLastLine = 0;
 	private float averangeFontSize = 0;
+	private float averangeFontWeight = 0;
 
 	public StatisticParser() throws IOException {
 	}
@@ -94,10 +97,11 @@ public class StatisticParser extends LocalPDFTextStripper {
 
 		Float fontSize;
 		for (TextPosition t : line) {
-			/*PDFont font = t.getFont();
+			PDFont font = t.getFont();
 			if (font != null) {
-				incrementOrAdd(fonts, font);
-			}*/
+				PDFontDescriptor fontDescriptor = font.getFontDescriptor();
+				incrementOrAdd(fontWeight, fontDescriptor.getFontWeight());
+			}
 			fontSize = t.getFontSizeInPt();
 			if (fontSize > 0) {
 				incrementOrAdd(linesFontSize, fontSize);
@@ -127,11 +131,12 @@ public class StatisticParser extends LocalPDFTextStripper {
 		averangeFontSize = findMax(linesFontSize);
 		averangeLineSpacing = findMax(lineSpacing);
 		averangeLastLine = findMax(lastLine);
+		averangeFontWeight = findMax(fontWeight);
 
 	}
 
 	private float findMax(Multiset<Float> multiset) {
-		Float actual = null;
+		float actual = 0f;
 		int max = -1;
 		for (Float k : multiset) {
 			int count = multiset.count(k);
@@ -174,6 +179,10 @@ public class StatisticParser extends LocalPDFTextStripper {
 
 	public float getAverangeLastLine() {
 		return averangeLastLine;
+	}
+	
+	public float getAverangeFontWeight() {
+		return averangeFontWeight;
 	}
 
 	@Override
@@ -232,7 +241,7 @@ public class StatisticParser extends LocalPDFTextStripper {
 	protected void writeWordSeparator() throws IOException {
 	}
 
-	public static boolean isItalic(PDFontDescriptor descriptor) {
+	public boolean isItalic(PDFontDescriptor descriptor) {
 		if (descriptor.getItalicAngle() != 0f) {
 			return true;
 		}
@@ -245,8 +254,8 @@ public class StatisticParser extends LocalPDFTextStripper {
 		return false;
 	}
 
-	public static boolean isBold(PDFontDescriptor descriptor) {
-		if (descriptor.getFontWeight() > 0f) {
+	public boolean isBold(PDFontDescriptor descriptor) {
+		if (descriptor.getFontWeight() > averangeFontWeight) {
 			return true;
 		}
 		if ((descriptor.getFlags() & FLAG_FORCE_BOLD) == FLAG_FORCE_BOLD) {
@@ -258,7 +267,7 @@ public class StatisticParser extends LocalPDFTextStripper {
 		return false;
 	}
 
-	public static boolean isItalic(TextPosition text) {
+	public boolean isItalic(TextPosition text) {
 		if (isItalic(text.getFont().getFontDescriptor())) {
 			return true;
 		}

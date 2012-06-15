@@ -1,6 +1,5 @@
 package net.timendum.pdf;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Collections;
@@ -25,14 +24,10 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	protected final StatisticParser statisticParser;
 	protected Images2HTML imageStripper = null;
 
-	protected float averangeLeftMargin;
 	//	protected double minLeftMargin;
 	protected double maxLeftMargin;
 	protected double minRightMargin;
 	//	protected double maxRightMargin;
-	protected float averangeFontSize;
-	private float averangeLastLine;
-	private float averangeLineSpacing;
 
 	protected float minBoxMean;
 	protected float maxBoxMean;
@@ -96,28 +91,24 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	@Override
 	public void writeText(PDDocument doc, Writer outputStream) throws IOException {
-		averangeFontSize = statisticParser.getAverangeFontSize();
 
-		averangeLeftMargin = statisticParser.getAverangeLeftMargin();
-		float marginDelta = averangeFontSize * DELTA;
-		maxLeftMargin = averangeLeftMargin + marginDelta;
+		float marginDelta = getAverangeFontSize() * DELTA;
+		maxLeftMargin = getAverangeLeftMargin() + marginDelta;
 		minRightMargin = statisticParser.getAverangeRightMargin() - marginDelta;
-
-		averangeLastLine = statisticParser.getAverangeLastLine();
-		averangeLineSpacing = statisticParser.getAverangeLineSpacing();
 
 		//outputStream = new PrintWriter(System.out);
 
 		super.writeText(doc, outputStream);
 	}
 
+
 	@Override
 	protected void startPage(PDPage page) throws IOException {
 		PDRectangle currentMediaBox = page.findMediaBox();
 		float mediaBoxWidth = currentMediaBox.getWidth();
 		float boxMean = mediaBoxWidth / 2;
-		minBoxMean = boxMean - averangeFontSize * DELTA;
-		maxBoxMean = boxMean + averangeFontSize * DELTA;
+		minBoxMean = boxMean - getAverangeFontSize() * DELTA;
+		maxBoxMean = boxMean + getAverangeFontSize() * DELTA;
 		prevLineY = -1f;
 		pageImages = images.row(page);
 	}
@@ -189,10 +180,10 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			sb.append(fontSizes);
 			sb.append("%;");
 		}
-		if (StatisticParser.isBold(text.getFont().getFontDescriptor())) {
+		if (statisticParser.isBold(text.getFont().getFontDescriptor())) {
 			sb.append("font-weight: bold;");
 		}
-		if (StatisticParser.isItalic(text)) {
+		if (statisticParser.isItalic(text)) {
 			sb.append("font-style: italic;");
 		}
 
@@ -206,8 +197,8 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		int fontSize = -1;
 		if (text instanceof WordSeparator) {
 			//	fontSize = -1;
-		} else if (text.getFontSizeInPt() != averangeFontSize) {
-			fontSize = Math.round(text.getFontSizeInPt() * 100 / averangeFontSize);
+		} else if (text.getFontSizeInPt() != getAverangeFontSize()) {
+			fontSize = Math.round(text.getFontSizeInPt() * 100 / getAverangeFontSize());
 		} else {
 			//	fontSize = -1;
 		}
@@ -311,8 +302,8 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 
 	protected void parseLineSpace(List<TextPosition> line) {
 		float lineY = getFirstTrimmed(line).getY();
-		if (prevLineY >= 0f && lineY - prevLineY > averangeLineSpacing) {
-			float perc = (lineY - prevLineY - averangeLineSpacing) / averangeFontSize;
+		if (prevLineY >= 0f && lineY - prevLineY > getAverangeLineSpacing()) {
+			float perc = (lineY - prevLineY - getAverangeLineSpacing()) / getAverangeFontSize();
 			if (perc > 0.2f) {
 				lineSpacing = perc + "em";
 			}
@@ -320,9 +311,25 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		prevLineY = lineY;
 	}
 
+	private float getAverangeLeftMargin() {
+		return statisticParser.getAverangeLeftMargin();
+	}
+
+	private float getAverangeFontSize() {
+		return statisticParser.getAverangeFontSize();
+	}
+
+	private float getAverangeLineSpacing() {
+		return statisticParser.getAverangeLineSpacing();
+	}
+
+	private float getAverangeLastLine() {
+		return statisticParser.getAverangeLastLine();
+	}
+
 	@Override
 	protected void endPage(PDPage page) throws IOException {
-		if (prevLineY > -1f && ((averangeLastLine - prevLineY) > averangeFontSize)) {
+		if (prevLineY > -1f && ((getAverangeLastLine() - prevLineY) > getAverangeFontSize())) {
 			pageBreak = true;
 		}
 	}
@@ -362,7 +369,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 		}
 
 		if (align == null) {
-			if (start > averangeLeftMargin) {
+			if (start > getAverangeLeftMargin()) {
 				// intent
 				startP = false;
 			}
