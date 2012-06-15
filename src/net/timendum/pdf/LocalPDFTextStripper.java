@@ -286,6 +286,9 @@ public class LocalPDFTextStripper extends org.apache.pdfbox.util.PDFText2HTML {
 	}
 
 	protected void writeLine(boolean isRtlDominant, boolean hasRtl, List<TextPosition> line) throws IOException {
+		if (isLineEmpty(line)) {
+			return;
+		}
 		writeLineStart(line);
 		output.flush();
 		writeLine(line, isRtlDominant, hasRtl);
