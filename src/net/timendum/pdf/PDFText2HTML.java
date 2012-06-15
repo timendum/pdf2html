@@ -243,7 +243,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 	protected String writeStartTag() throws IOException {
-		if (align != null || lineSpacing != null) {
+		if (align != null) {
 			StringBuilder sb = new StringBuilder();
 			if (startP) {
 				sb.append("</p>");
@@ -265,13 +265,18 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 			return sb.toString();
 		}
 
-		if (startP == false) {
+		if (startP == false || lineSpacing != null) {
 			startP = true;
 			StringBuilder sb = new StringBuilder();
 			sb.append("<p");
-			if (pageBreak) {
+			if (pageBreak || lineSpacing != null) {
 				sb.append(" style='");
 				addPageBreak(sb);
+				if (lineSpacing != null) {
+					sb.append("margin-top: ");
+					sb.append(lineSpacing);
+					sb.append(';');
+				}
 				sb.append('\'');
 			}
 			sb.append('>');
@@ -289,7 +294,7 @@ public class PDFText2HTML extends LocalPDFTextStripper {
 	}
 
 	protected String writeEndTag() throws IOException {
-		if (align != null || lineSpacing != null) {
+		if (align != null) {
 			return "</div>";
 		}
 
